@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Retail II Sales Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #12343b;
+    --ink-soft: #5d6f75;
+    --paper: #f2f5f6;
+    --card: #ffffff;
+    --line: #dbe3e6;
+    --berry: #c2255c;
+    --gold: #d99a1e;
+    --teal: #1f7a8c;
+    --band: rgba(217, 154, 30, 0.14);
+    --font-head: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+    --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  /* sidebar */
+  .side {
+    background: var(--ink);
+    color: #e8f0f2;
+    padding: 28px 20px;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .brand { font-family: var(--font-head); font-weight: 700; font-size: 20px; line-height: 1.2; margin: 0 0 6px; }
+  .sub { color: #a9bec4; font-size: 14px; margin: 0 0 28px; }
+  .nav { display: flex; flex-direction: column; gap: 6px; }
+  .nav button {
+    all: unset; cursor: pointer; padding: 10px 12px; border-radius: 8px;
+    color: #cfe0e4; font-weight: 500; border-left: 3px solid transparent;
+  }
+  .nav button:hover { background: rgba(255,255,255,0.07); }
+  .nav button[aria-current="page"] { background: rgba(255,255,255,0.12); color: #fff; border-left-color: var(--gold); }
+  .nav button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .side .foot { position: absolute; bottom: 24px; left: 20px; right: 20px; font-size: 13px; color: #8fa7ae; }
+
+  /* main */
+  main { padding: 32px 40px 56px; max-width: 1180px; }
+  h1 { font-family: var(--font-head); font-size: 34px; line-height: 1.15; margin: 0 0 6px; font-weight: 700; }
+  h2 { font-family: var(--font-head); font-size: 22px; margin: 0 0 4px; font-weight: 700; }
+  .lede { color: var(--ink-soft); margin: 0 0 24px; max-width: 70ch; }
+  .view[hidden] { display: none; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .kpi .v { font-family: var(--font-head); font-size: 26px; font-weight: 700; }
+  .kpi .l { color: var(--ink-soft); font-size: 14px; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; margin-bottom: 18px; }
+  .card p.note { color: var(--ink-soft); font-size: 14px; margin: 4px 0 14px; max-width: 75ch; }
+  .chart-wrap { position: relative; width: 100%; }
+  .hero .chart-wrap { height: 360px; }
+  .half .chart-wrap { height: 380px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid2 .card { margin-bottom: 0; }
+
+  .takeaways { margin: 0; padding-left: 18px; }
+  .takeaways li { margin-bottom: 6px; }
+
+  /* heatmap */
+  .heat { overflow-x: auto; }
+  .heat table { border-collapse: separate; border-spacing: 3px; width: 100%; min-width: 640px; }
+  .heat th { font-weight: 500; font-size: 12px; color: var(--ink-soft); padding: 2px 4px; text-align: center; }
+  .heat th.row { text-align: right; padding-right: 8px; white-space: nowrap; }
+  .heat td { height: 34px; border-radius: 4px; text-align: center; font-size: 11px; color: #0d2429; }
+  .legend { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--ink-soft); }
+  .legend .bar { width: 160px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #e9f3f5, #1f7a8c, #12343b); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .side { position: static; height: auto; padding: 18px 20px; }
+    .side .foot { display: none; }
+    .nav { flex-direction: row; flex-wrap: wrap; }
+    main { padding: 22px 18px 40px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .grid2 { grid-template-columns: 1fr; }
+    h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <p class="brand">Online Retail II</p>
+    <p class="sub">UK gift-ware shop, Dec 2009 to Dec 2011</p>
+    <nav class="nav" aria-label="Dashboard pages">
+      <button data-view="overview" aria-current="page">Overview</button>
+      <button data-view="products">Products and countries</button>
+      <button data-view="timing">When customers buy</button>
+    </nav>
+    <div class="foot">Data: UCI Online Retail II. Cancelled orders, zero-price rows and duplicates removed. Amounts in pounds (£).</div>
+  </aside>
+
+  <main>
+    <!-- PAGE 1 -->
+    <section class="view" id="view-overview">
+      <h1>Sales follow the Christmas season</h1>
+      <p class="lede" id="lede"></p>
+      <div class="kpis" id="kpis"></div>
+      <div class="card hero">
+        <h2>Monthly revenue</h2>
+        <p class="note">The shaded months are September to November. The dashed line at the end is a partial month: the data stops on 9 December 2011.</p>
+        <div class="chart-wrap"><canvas id="chartMonthly" role="img" aria-label="Line chart of monthly revenue"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>What stands out</h2>
+        <ul class="takeaways" id="takeaways"></ul>
+      </div>
+    </section>
+
+    <!-- PAGE 2 -->
+    <section class="view" id="view-products" hidden>
+      <h1>What sells, and where</h1>
+      <p class="lede" id="lede2"></p>
+      <div class="grid2 half">
+        <div class="card">
+          <h2>Top 10 products by revenue</h2>
+          <p class="note">Fees and manual entries (postage, "Manual") are left out, so only real products appear.</p>
+          <div class="chart-wrap"><canvas id="chartProducts" role="img" aria-label="Bar chart of top 10 products"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Top countries outside the UK</h2>
+          <p class="note" id="countryNote"></p>
+          <div class="chart-wrap"><canvas id="chartCountries" role="img" aria-label="Bar chart of top countries excluding the United Kingdom"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 3 -->
+    <section class="view" id="view-timing" hidden>
+      <h1>When customers buy</h1>
+      <p class="lede" id="lede3"></p>
+      <div class="card">
+        <h2>Orders by day and hour</h2>
+        <p class="note">Each square counts invoices placed in that hour. Darker means more orders.</p>
+        <div class="heat" id="heat"></div>
+        <div class="legend"><span>Fewer orders</span><span class="bar"></span><span>More orders</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Data comes from summary.json (made in the notebook)
+const DATA = {"kpis": {"revenue": 20476260.45, "orders": 40077, "customers": 5878, "avg_order_value": 510.92, "top20pct_customers_share": 77.2}, "monthly": [{"Month": "2009-12", "Revenue": 822484.0}, {"Month": "2010-01", "Revenue": 651155.0}, {"Month": "2010-02", "Revenue": 551505.0}, {"Month": "2010-03", "Revenue": 830915.0}, {"Month": "2010-04", "Revenue": 678875.0}, {"Month": "2010-05", "Revenue": 657706.0}, {"Month": "2010-06", "Revenue": 749537.0}, {"Month": "2010-07", "Revenue": 648810.0}, {"Month": "2010-08", "Revenue": 695252.0}, {"Month": "2010-09", "Revenue": 921697.0}, {"Month": "2010-10", "Revenue": 1161902.0}, {"Month": "2010-11", "Revenue": 1464293.0}, {"Month": "2010-12", "Revenue": 821453.0}, {"Month": "2011-01", "Revenue": 689812.0}, {"Month": "2011-02", "Revenue": 522546.0}, {"Month": "2011-03", "Revenue": 716215.0}, {"Month": "2011-04", "Revenue": 536968.0}, {"Month": "2011-05", "Revenue": 769297.0}, {"Month": "2011-06", "Revenue": 760547.0}, {"Month": "2011-07", "Revenue": 718076.0}, {"Month": "2011-08", "Revenue": 757841.0}, {"Month": "2011-09", "Revenue": 1056435.0}, {"Month": "2011-10", "Revenue": 1151264.0}, {"Month": "2011-11", "Revenue": 1503867.0}, {"Month": "2011-12", "Revenue": 637808.0}], "countries": [{"Country": "United Kingdom", "Revenue": 17410196.0}, {"Country": "EIRE", "Revenue": 658767.0}, {"Country": "Netherlands", "Revenue": 554038.0}, {"Country": "Germany", "Revenue": 425020.0}, {"Country": "France", "Revenue": 350456.0}, {"Country": "Australia", "Revenue": 169283.0}, {"Country": "Spain", "Revenue": 108332.0}, {"Country": "Switzerland", "Revenue": 100686.0}, {"Country": "Sweden", "Revenue": 91870.0}, {"Country": "Denmark", "Revenue": 68581.0}], "top_products": [{"Description": "REGENCY CAKESTAND 3 TIER", "Revenue": 330590.0}, {"Description": "WHITE HANGING HEART T-LIGHT HOLDER", "Revenue": 260990.0}, {"Description": "PAPER CRAFT , LITTLE BIRDIE", "Revenue": 168470.0}, {"Description": "PARTY BUNTING", "Revenue": 148318.0}, {"Description": "JUMBO BAG RED RETROSPOT", "Revenue": 148073.0}, {"Description": "ASSORTED COLOUR BIRD ORNAMENT", "Revenue": 129324.0}, {"Description": "PAPER CHAIN KIT 50'S CHRISTMAS ", "Revenue": 117760.0}, {"Description": "MEDIUM CERAMIC TOP STORAGE JAR", "Revenue": 81701.0}, {"Description": "CHILLI LIGHTS", "Revenue": 80541.0}, {"Description": "ROTATING SILVER ANGELS T-LIGHT HLDR", "Revenue": 71300.0}], "heatmap": [{"DayOfWeek": "Friday", "Hour": 7, "Orders": 12}, {"DayOfWeek": "Friday", "Hour": 8, "Orders": 208}, {"DayOfWeek": "Friday", "Hour": 9, "Orders": 503}, {"DayOfWeek": "Friday", "Hour": 10, "Orders": 829}, {"DayOfWeek": "Friday", "Hour": 11, "Orders": 811}, {"DayOfWeek": "Friday", "Hour": 12, "Orders": 949}, {"DayOfWeek": "Friday", "Hour": 13, "Orders": 821}, {"DayOfWeek": "Friday", "Hour": 14, "Orders": 837}, {"DayOfWeek": "Friday", "Hour": 15, "Orders": 608}, {"DayOfWeek": "Friday", "Hour": 16, "Orders": 323}, {"DayOfWeek": "Friday", "Hour": 17, "Orders": 180}, {"DayOfWeek": "Friday", "Hour": 18, "Orders": 6}, {"DayOfWeek": "Friday", "Hour": 19, "Orders": 9}, {"DayOfWeek": "Friday", "Hour": 20, "Orders": 1}, {"DayOfWeek": "Monday", "Hour": 7, "Orders": 14}, {"DayOfWeek": "Monday", "Hour": 8, "Orders": 170}, {"DayOfWeek": "Monday", "Hour": 9, "Orders": 506}, {"DayOfWeek": "Monday", "Hour": 10, "Orders": 734}, {"DayOfWeek": "Monday", "Hour": 11, "Orders": 736}, {"DayOfWeek": "Monday", "Hour": 12, "Orders": 1003}, {"DayOfWeek": "Monday", "Hour": 13, "Orders": 942}, {"DayOfWeek": "Monday", "Hour": 14, "Orders": 816}, {"DayOfWeek": "Monday", "Hour": 15, "Orders": 756}, {"DayOfWeek": "Monday", "Hour": 16, "Orders": 469}, {"DayOfWeek": "Monday", "Hour": 17, "Orders": 188}, {"DayOfWeek": "Monday", "Hour": 18, "Orders": 17}, {"DayOfWeek": "Saturday", "Hour": 10, "Orders": 6}, {"DayOfWeek": "Saturday", "Hour": 11, "Orders": 1}, {"DayOfWeek": "Saturday", "Hour": 12, "Orders": 6}, {"DayOfWeek": "Saturday", "Hour": 13, "Orders": 7}, {"DayOfWeek": "Saturday", "Hour": 14, "Orders": 3}, {"DayOfWeek": "Saturday", "Hour": 15, "Orders": 5}, {"DayOfWeek": "Saturday", "Hour": 16, "Orders": 2}, {"DayOfWeek": "Sunday", "Hour": 9, "Orders": 6}, {"DayOfWeek": "Sunday", "Hour": 10, "Orders": 520}, {"DayOfWeek": "Sunday", "Hour": 11, "Orders": 855}, {"DayOfWeek": "Sunday", "Hour": 12, "Orders": 975}, {"DayOfWeek": "Sunday", "Hour": 13, "Orders": 836}, {"DayOfWeek": "Sunday", "Hour": 14, "Orders": 677}, {"DayOfWeek": "Sunday", "Hour": 15, "Orders": 726}, {"DayOfWeek": "Sunday", "Hour": 16, "Orders": 237}, {"DayOfWeek": "Sunday", "Hour": 17, "Orders": 3}, {"DayOfWeek": "Thursday", "Hour": 6, "Orders": 1}, {"DayOfWeek": "Thursday", "Hour": 7, "Orders": 22}, {"DayOfWeek": "Thursday", "Hour": 8, "Orders": 213}, {"DayOfWeek": "Thursday", "Hour": 9, "Orders": 553}, {"DayOfWeek": "Thursday", "Hour": 10, "Orders": 858}, {"DayOfWeek": "Thursday", "Hour": 11, "Orders": 825}, {"DayOfWeek": "Thursday", "Hour": 12, "Orders": 1152}, {"DayOfWeek": "Thursday", "Hour": 13, "Orders": 1000}, {"DayOfWeek": "Thursday", "Hour": 14, "Orders": 918}, {"DayOfWeek": "Thursday", "Hour": 15, "Orders": 859}, {"DayOfWeek": "Thursday", "Hour": 16, "Orders": 667}, {"DayOfWeek": "Thursday", "Hour": 17, "Orders": 520}, {"DayOfWeek": "Thursday", "Hour": 18, "Orders": 361}, {"DayOfWeek": "Thursday", "Hour": 19, "Orders": 290}, {"DayOfWeek": "Thursday", "Hour": 20, "Orders": 49}, {"DayOfWeek": "Tuesday", "Hour": 7, "Orders": 17}, {"DayOfWeek": "Tuesday", "Hour": 8, "Orders": 205}, {"DayOfWeek": "Tuesday", "Hour": 9, "Orders": 631}, {"DayOfWeek": "Tuesday", "Hour": 10, "Orders": 817}, {"DayOfWeek": "Tuesday", "Hour": 11, "Orders": 839}, {"DayOfWeek": "Tuesday", "Hour": 12, "Orders": 1120}, {"DayOfWeek": "Tuesday", "Hour": 13, "Orders": 1042}, {"DayOfWeek": "Tuesday", "Hour": 14, "Orders": 860}, {"DayOfWeek": "Tuesday", "Hour": 15, "Orders": 829}, {"DayOfWeek": "Tuesday", "Hour": 16, "Orders": 504}, {"DayOfWeek": "Tuesday", "Hour": 17, "Orders": 313}, {"DayOfWeek": "Tuesday", "Hour": 18, "Orders": 81}, {"DayOfWeek": "Tuesday", "Hour": 19, "Orders": 31}, {"DayOfWeek": "Tuesday", "Hour": 20, "Orders": 2}, {"DayOfWeek": "Wednesday", "Hour": 7, "Orders": 12}, {"DayOfWeek": "Wednesday", "Hour": 8, "Orders": 202}, {"DayOfWeek": "Wednesday", "Hour": 9, "Orders": 555}, {"DayOfWeek": "Wednesday", "Hour": 10, "Orders": 846}, {"DayOfWeek": "Wednesday", "Hour": 11, "Orders": 836}, {"DayOfWeek": "Wednesday", "Hour": 12, "Orders": 1221}, {"DayOfWeek": "Wednesday", "Hour": 13, "Orders": 1047}, {"DayOfWeek": "Wednesday", "Hour": 14, "Orders": 960}, {"DayOfWeek": "Wednesday", "Hour": 15, "Orders": 783}, {"DayOfWeek": "Wednesday", "Hour": 16, "Orders": 516}, {"DayOfWeek": "Wednesday", "Hour": 17, "Orders": 203}, {"DayOfWeek": "Wednesday", "Hour": 18, "Orders": 1}, {"DayOfWeek": "Wednesday", "Hour": 19, "Orders": 2}, {"DayOfWeek": "Wednesday", "Hour": 20, "Orders": 1}]};
+
+const fmtMoney = n => "£" + Math.round(n).toLocaleString("en-GB");
+const fmtK = n => n >= 1e6 ? "£" + (n / 1e6).toFixed(1) + "M" : "£" + Math.round(n / 1000) + "k";
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+Chart.defaults.font.family = '"Figtree", "Segoe UI", system-ui, sans-serif';
+Chart.defaults.color = "#5d6f75";
+Chart.defaults.animation = reduceMotion ? false : { duration: 500 };
+
+// ----- numbers used in the text -----
+const k = DATA.kpis;
+const ukRow = DATA.countries.find(c => c.Country === "United Kingdom");
+const ukShare = ukRow ? (ukRow.Revenue / k.revenue * 100) : null;
+const months = DATA.monthly.map(m => m.Month);
+const revenue = DATA.monthly.map(m => m.Revenue);
+const peakIdx = revenue.indexOf(Math.max(...revenue));
+
+document.getElementById("lede").textContent =
+  "A UK online shop selling gift-ware, many of its customers wholesalers. Revenue climbs every autumn and peaks in November.";
+document.getElementById("lede2").textContent =
+  "Revenue by product and by country, after removing cancelled orders and non-product rows.";
+document.getElementById("lede3").textContent =
+  "Order counts by day of the week and hour of the day, which shows when staff and stock matter most.";
+
+// ----- KPI cards -----
+const kpiItems = [
+  [fmtMoney(k.revenue), "Total revenue"],
+  [k.orders.toLocaleString("en-GB"), "Orders"],
+  [k.customers.toLocaleString("en-GB"), "Customers with an ID"],
+  [fmtMoney(k.avg_order_value), "Average order value"]
+];
+document.getElementById("kpis").innerHTML = kpiItems
+  .map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+
+// ----- takeaways (all computed from the data) -----
+const take = [];
+take.push(`The best month was ${months[peakIdx]} with ${fmtMoney(revenue[peakIdx])}.`);
+if (ukShare !== null) take.push(`The United Kingdom brings ${ukShare.toFixed(0)}% of revenue.`);
+take.push(`The top 20% of customers bring ${k.top20pct_customers_share}% of the revenue from customers with an ID, so a small group matters a lot.`);
+take.push("About 15% of revenue has no customer ID. It still counts as sales, but it cannot be linked to a customer.");
+document.getElementById("takeaways").innerHTML = take.map(t => `<li>${t}</li>`).join("");
+
+// ----- monthly line chart with Sep-Nov bands -----
+const seasonBands = {
+  id: "seasonBands",
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    ctx.save();
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--band");
+    months.forEach((m, i) => {
+      const mm = m.slice(5);
+      if (mm === "09" || mm === "10" || mm === "11") {
+        const x = scales.x.getPixelForValue(i);
+        const w = scales.x.getPixelForValue(1) - scales.x.getPixelForValue(0);
+        ctx.fillRect(x - w / 2, chartArea.top, w, chartArea.bottom - chartArea.top);
+      }
+    });
+    ctx.restore();
+  }
+};
+const lastIdx = months.length - 1;
+new Chart(document.getElementById("chartMonthly"), {
+  type: "line",
+  data: {
+    labels: months,
+    datasets: [{
+      data: revenue,
+      borderColor: "#c2255c",
+      backgroundColor: "#c2255c",
+      borderWidth: 2.5,
+      pointRadius: 3,
+      tension: 0.25,
+      segment: { borderDash: ctx => ctx.p1DataIndex === lastIdx ? [6, 5] : undefined }
+    }]
+  },
+  options: {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: c => fmtMoney(c.parsed.y) } }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { callback: v => fmtK(v) }, grid: { color: "#e6ecee" } },
+      x: { grid: { display: false }, ticks: { maxRotation: 60, autoSkip: true, maxTicksLimit: 13 } }
+    }
+  },
+  plugins: [seasonBands]
+});
+
+// ----- top products -----
+const prods = DATA.top_products;
+new Chart(document.getElementById("chartProducts"), {
+  type: "bar",
+  data: {
+    labels: prods.map(p => p.Description),
+    datasets: [{ data: prods.map(p => p.Revenue), backgroundColor: "#1f7a8c", borderRadius: 4 }]
+  },
+  options: {
+    indexAxis: "y",
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmtMoney(c.parsed.x) } } },
+    scales: {
+      x: { ticks: { callback: v => fmtK(v) }, grid: { color: "#e6ecee" } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// ----- countries outside UK -----
+const others = DATA.countries.filter(c => c.Country !== "United Kingdom");
+document.getElementById("countryNote").textContent = ukShare !== null
+  ? `The United Kingdom is ${ukShare.toFixed(0)}% of revenue (${fmtMoney(ukRow.Revenue)}), so it is left out to make the other countries readable.`
+  : "";
+new Chart(document.getElementById("chartCountries"), {
+  type: "bar",
+  data: {
+    labels: others.map(c => c.Country),
+    datasets: [{ data: others.map(c => c.Revenue), backgroundColor: "#d99a1e", borderRadius: 4 }]
+  },
+  options: {
+    indexAxis: "y",
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmtMoney(c.parsed.x) } } },
+    scales: {
+      x: { ticks: { callback: v => fmtK(v) }, grid: { color: "#e6ecee" } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ----- heatmap (built with plain HTML) -----
+const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const hours = [...new Set(DATA.heatmap.map(r => r.Hour))].sort((a, b) => a - b);
+const lookup = {};
+let maxOrders = 0;
+DATA.heatmap.forEach(r => { lookup[r.DayOfWeek + "|" + r.Hour] = r.Orders; maxOrders = Math.max(maxOrders, r.Orders); });
+const dayTotals = days.map(d => hours.reduce((s, h) => s + (lookup[d + "|" + h] || 0), 0));
+const busiest = days[dayTotals.indexOf(Math.max(...dayTotals))];
+const quietest = days[dayTotals.indexOf(Math.min(...dayTotals))];
+const peak = DATA.heatmap.reduce((a, b) => (b.Orders > a.Orders ? b : a));
+document.getElementById("lede3").textContent =
+  `${busiest} is the busiest day and ${quietest} is almost empty (${dayTotals[days.indexOf(quietest)]} orders in two years). The busiest hour is ${peak.Hour}:00 on ${peak.DayOfWeek}.`;
+
+function shade(v) {
+  const t = Math.min(v / maxOrders, 1);
+  // light teal to dark teal
+  const from = [233, 243, 245], to = [18, 52, 59];
+  const c = from.map((f, i) => Math.round(f + (to[i] - f) * t));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+let html = "<table><thead><tr><th></th>" + hours.map(h => `<th>${h}:00</th>`).join("") + "</tr></thead><tbody>";
+days.forEach(d => {
+  html += `<tr><th class="row" scope="row">${d}</th>`;
+  hours.forEach(h => {
+    const v = lookup[d + "|" + h] || 0;
+    const dark = v / maxOrders > 0.55;
+    html += `<td title="${d} ${h}:00, ${v} orders" style="background:${shade(v)};color:${dark ? "#fff" : "#0d2429"}">${v || ""}</td>`;
+  });
+  html += "</tr>";
+});
+html += "</tbody></table>";
+document.getElementById("heat").innerHTML = html;
+
+// ----- page switching -----
+const buttons = document.querySelectorAll(".nav button");
+buttons.forEach(btn => btn.addEventListener("click", () => {
+  buttons.forEach(b => b.removeAttribute("aria-current"));
+  btn.setAttribute("aria-current", "page");
+  document.querySelectorAll(".view").forEach(v => v.hidden = true);
+  document.getElementById("view-" + btn.dataset.view).hidden = false;
+  window.dispatchEvent(new Event("resize"));
+}));
+</script>
+</body>
+</html>
